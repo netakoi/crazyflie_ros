@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="joy_dev" default="/dev/input/js0" />
-  <arg name="ip" default="192.168.28.132" />
+  <arg name="ip" default="vicon" />
   <arg name="port" default="3883" />
 
-  <arg name="uri" default="radio://0/1/2M/E7E7E7E7E1" />
+  <arg name="uri" default="radio://0/80/2M" />
   <arg name="frame" default="crazyflie" />
   <arg name="x" default="0" />
   <arg name="y" default="0" />
@@ -43,19 +43,17 @@
     <node pkg="tf" type="static_transform_publisher" name="baselink_broadcaster" args="0 0 0 0 0 0 1 $(arg frame) /crazyflie/base_link 100" />
 
     <!-- run vrpn client -->
-  <node pkg="vrpn_client_ros" name="vrpn_client_node" output="screen" type="vrpn_client_node" required="true">
+    <node pkg="ros_vrpn_client" name="vrpn" output="screen" type="ros_vrpn_client" required="true">
       <param name="ip" value="$(arg ip)" />
       <param name="port" value="$(arg port)" />
-      <param name="frame_id" value="world" />
+      <param name="frame_id" value="/world" />
       <param name="child_frame_id" value="$(arg frame)" />
     </node>
-  <!-- <include file="$(find vrpn_client_ros)/launch/sample.launch">
-   </include>-->
   </group>
 
 
   <!-- run rviz -->
- <!-- <param name="robot_description" command="$(find xacro)/xacro.py $(find crazyflie_description)/urdf/crazyflie.urdf.xacro" />
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyflie_demo)/launch/crazyflie_pos.rviz" required="true" />-->
+  <param name="robot_description" command="$(find xacro)/xacro.py $(find crazyflie_description)/urdf/crazyflie.urdf.xacro" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyflie_demo)/launch/crazyflie_pos.rviz" required="true" />
 
 </launch>

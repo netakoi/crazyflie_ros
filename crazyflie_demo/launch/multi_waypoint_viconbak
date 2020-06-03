@@ -1,14 +1,12 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="joy_dev" default="/dev/input/js0" />
-  <arg name="ip" default="192.168.28.132" />
-  <arg name="port" default="3883" />
 
-  <arg name="uri1" default="radio://0/80/2M/E7E7E7E7E8" />
-  <arg name="frame1" default="crazyflie1" />
+  <arg name="uri1" default="radio://0/80/2M/E7E7E7E701" />
+  <arg name="frame1" default="/vicon/crazyflie1/crazyflie1" />
 
-  <arg name="uri2" default="radio://0/1/2M/E7E7E7E7EA" />
-  <arg name="frame2" default="crazyflie2" />
+  <arg name="uri2" default="radio://0/80/2M/E7E7E7E702" />
+  <arg name="frame2" default="/vicon/crazyflie2/crazyflie2" />
 
   <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
   </include>
@@ -36,17 +34,6 @@
     <node name="pose" pkg="crazyflie_demo" type="demo1.py" output="screen">
       <param name="frame" value="$(arg frame1)" />
     </node>
-
-    <node pkg="tf" type="static_transform_publisher" name="baselink_broadcaster" args="0 0 0 0 0 0 1 $(arg frame1) /crazyflie/base_link 100" />
-
-    <!-- run vrpn client -->
-    <node pkg="vrpn_client_ros" name="vrpn_client_node" output="screen" type="vrpn_client_node" required="true">
-      <param name="ip" value="$(arg ip)" />
-      <param name="port" value="$(arg port)" />
-      <param name="frame_id" value="world" />
-      <param name="child_frame_id" value="$(arg frame1)" />
-    </node>
-
   </group>
 
   <group ns="crazyflie2">
@@ -68,19 +55,9 @@
     <node name="pose" pkg="crazyflie_demo" type="demo2.py" output="screen">
       <param name="frame" value="$(arg frame2)" />
     </node>
-
-    <node pkg="tf" type="static_transform_publisher" name="baselink_broadcaster" args="0 0 0 0 0 0 1 $(arg frame2) /crazyflie/base_link 100" />
-
-    <!-- run vrpn client -->
-    <node pkg="vrpn_client_ros" name="vrpn_client_node" output="screen" type="vrpn_client_node" required="true">
-      <param name="ip" value="$(arg ip)" />
-      <param name="port" value="$(arg port)" />
-      <param name="frame_id" value="world" />
-      <param name="child_frame_id" value="$(arg frame2)" />
-    </node>
-
   </group>
 
-
+  <!-- run vicon bridge -->
+  <include file="$(find vicon_bridge)/launch/vicon.launch"/>
 
 </launch>

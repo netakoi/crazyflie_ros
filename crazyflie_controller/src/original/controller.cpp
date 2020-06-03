@@ -2,17 +2,9 @@
 #include <tf/transform_listener.h>
 #include <std_srvs/Empty.h>
 #include <geometry_msgs/Twist.h>
-#include <sensor_msgs/Imu.h>
 
 
 #include "pid.hpp"
-
-double goal_x = 0;
-double goal_y = 0;
-double goal_z = 0;
-double vrpn_x = 0;
-double vrpn_y = 0;
-double vrpn_z = 0;
 
 double get(
     const ros::NodeHandle& n,
@@ -79,14 +71,11 @@ public:
         , m_startZ(0)
     {
         ros::NodeHandle nh;
-        m_listener.waitForTransform(m_worldFrame, m_frame, ros::Time(0), ros::Duration(10.0));
+        m_listener.waitForTransform(m_worldFrame, m_frame, ros::Time(0), ros::Duration(10.0)); 
         m_pubNav = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
         m_subscribeGoal = nh.subscribe("goal", 1, &Controller::goalChanged, this);
         m_serviceTakeoff = nh.advertiseService("takeoff", &Controller::takeoff, this);
         m_serviceLand = nh.advertiseService("land", &Controller::land, this);
-        m_goal_sub = nh.subscribe("/goal_autonomous", 1000, &Controller::GoalCallback, this);
-        m_vrpn_sub = nh.subscribe("/vrpn_client_node/crazyflie/pose", 1000, &Controller::VrpnCallback, this);
-        //m_imu_sub = nh.subscribe("/crazyflie/imu", 1000, &Controller::imuCallback, this);
     }
 
     void run(double frequency)
@@ -142,27 +131,6 @@ private:
         m_pidZ.reset();
         m_pidYaw.reset();
     }
-
-    void GoalCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
-	  {
-		    goal_x = msg->pose.position.x; //X Setpoint
-		    goal_y = msg->pose.position.y; //Y Setpoint
-		    goal_z = msg->pose.position.z; //Z Setpoint
-		}
-
-    void VrpnCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
-	  {
-		    vrpn_x = msg->pose.position.x; //X Setpoint
-		    vrpn_y = msg->pose.position.y; //Y Setpoint
-		    vrpn_z = msg->pose.position.z; //Z Setpoint
-		}
-
-    /*void imuCallback(const sensor_msgs::Imu::ConstPtr& msg)
-	  {
-		    actual_roll = msg->angular_velocity.x*3.141592654/180;
-		    actual_pitch = msg->angular_velocity.y*3.141592654/180;
-	 	    actual_yaw = msg->angular_velocity.z*3.141592654/180;
-	  }*/
 
     void iteration(const ros::TimerEvent& e)
     {
@@ -226,24 +194,10 @@ private:
                     )).getRPY(roll, pitch, yaw);
 
                 geometry_msgs::Twist msg;
-                //if(targetDrone.pose.position.z > 0.25){ // after take off
-                  //msg.linear.x = m_pidX.update(0, targetDrone.pose.position.x);
-                  //msg.linear.y = m_pidY.update(0.0, targetDrone.pose.position.y);
-                  //msg.linear.z = m_pidZ.update(0.0, targetDrone.pose.position.z);
-                  //msg.angular.z = m_pidYaw.update(0.0, yaw);
-                  msg.linear.x = m_pidX.update(vrpn_x, goal_x);
-                  msg.linear.y = m_pidY.update(vrpn_y, goal_y);
-                  msg.linear.z = m_pidZ.update(vrpn_z, goal_z);
-                  ROS_INFO("AUTONOMOUS phase");
-
-                /*}else{
-                  msg.linear.x = m_pidX.update(0, 0.0);
-                  msg.linear.y = m_pidY.update(0.0, 0.0);
-                  msg.linear.z = 45000;
-                  msg.angular.z = m_pidYaw.update(0.0, 0.0);
-                  ROS_INFO("automatic-takeoff phase");
-
-                }*/
+                msg.linear.x = m_pidX.update(0, targetDrone.pose.position.x);
+                msg.linear.y = m_pidY.update(0.0, targetDrone.pose.position.y);
+                msg.linear.z = m_pidZ.update(0.0, targetDrone.pose.position.z);
+                msg.angular.z = m_pidYaw.update(0.0, yaw);
                 m_pubNav.publish(msg);
 
 
@@ -280,8 +234,6 @@ private:
     State m_state;
     geometry_msgs::PoseStamped m_goal;
     ros::Subscriber m_subscribeGoal;
-    ros::Subscriber m_goal_sub;
-    ros::Subscriber m_vrpn_sub;
     ros::ServiceServer m_serviceTakeoff;
     ros::ServiceServer m_serviceLand;
     float m_thrust;
